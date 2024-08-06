@@ -7,6 +7,10 @@ import { createResponse } from "node-mocks-http";
 
 type RouterType = Elysia<string>;
 
+// has to be here, otherwise TSC will not export it into type declarations.
+// idk how to fix it...
+export { AdminJS };
+
 const buildAssets = (
   admin: AdminJS,
   assets: (typeof AdminJSRouter)["assets"],

@@ -1,13 +1,12 @@
 {
   "name": "adminjs-elysia",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Unofficial AdminJS plugin which integrates it with Elysia",
   "author": "Adam Verner <averner@averner.cz>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "bun build src/index.ts --target bun --outdir dist --minify && bun run build:dts",
-    "build:dts": "tsc --emitDeclarationOnly --project tsconfig.types.json",
+    "build": " tsc --project tsconfig.json",
     "prepublishOnly": "bun run build",
     "example:minimal": "bun run example/minimal.ts",
     "example:drizzle": "bun run example/drizzle.ts"
