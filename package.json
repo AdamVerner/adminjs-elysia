@@ -9,6 +9,7 @@
     "build": " tsc --project tsconfig.json",
     "prepublishOnly": "bun run build",
     "example:minimal": "bun run example/minimal.ts",
+    "example:auth": "bun run --watch example/auth.ts",
     "example:drizzle": "bun run example/drizzle.ts"
   },
   "files": [
@@ -39,7 +40,8 @@
   "peerDependencies": {
     "adminjs": "^7.8.8",
     "elysia": "^1.1.5",
+    "@elysiajs/jwt": "^1.1.0",
     "node-mocks-http": "^1.15.1"
   },
-  "dependencies": {}
+  "dependencies": {  }
 }
