@@ -1,2 +1,6 @@
 export { buildRouter } from "./buildRouter";
-export { buildAuthenticatedRouter } from "./buildAuthenticatedRouter";
+export {
+  buildAuthenticatedRouter,
+  type AuthenticationOptions,
+  type AuthenticatedRouterOptions,
+} from "./buildAuthenticatedRouter";

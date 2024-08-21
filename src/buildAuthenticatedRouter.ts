@@ -19,7 +19,10 @@ export type AuthenticationOptions = {
   provider: BaseAuthProvider<Context>;
 };
 
-export type RouterOptions = { logErrors: boolean; logAccess: boolean };
+export type AuthenticatedRouterOptions = {
+  logErrors: boolean;
+  logAccess: boolean;
+};
 
 const getLoginPath = (admin: AdminJS): string => {
   const { loginPath, rootPath } = admin.options;
@@ -34,7 +37,7 @@ const getLoginPath = (admin: AdminJS): string => {
     : `/${normalizedLoginPath}`;
 };
 
-export const buildLoginLogout = (
+const buildLoginLogout = (
   admin: AdminJS,
   auth: AuthenticationOptions,
   router: RouterType,
@@ -75,8 +78,8 @@ export const buildLoginLogout = (
       return { adminUser };
     })
     .get(loginPath, async ({ set, cookie }) => {
-      set.headers["Content-Type"] = "text/html;charset=utf-8";
       cookie[cookieName].remove();
+      set.headers["Content-Type"] = "text/html;charset=utf-8";
       return await admin.renderLogin({
         action: admin.options.loginPath,
         errorMessage: null,
@@ -91,27 +94,36 @@ export const buildLoginLogout = (
     .post(
       loginPath,
       async (ctx) => {
-        let adminUser = await auth.provider.handleLogin(
-          {
-            headers: ctx.headers,
-            query: ctx.query,
-            params: ctx.params,
-            data: ctx.body ?? {},
-          },
-          ctx,
-        );
-        if (adminUser) {
-          console.log("adminUser", JSON.stringify(adminUser));
-          ctx.cookie[cookieName].value = await ctx.jwt.sign(adminUser);
-          console.log(
-            "redirecting user to ",
-            ctx.cookie?.redirectTo?.value ?? admin.options.rootPath,
+        let adminUser: CurrentAdmin | null | undefined;
+        try {
+          adminUser = await auth.provider.handleLogin(
+            {
+              headers: ctx.headers,
+              query: ctx.query,
+              params: ctx.params,
+              data: ctx.body ?? {},
+            },
+            ctx,
           );
+        } catch (e) {
+          cookie[cookieName]?.remove();
+          ctx.set.headers["Content-Type"] = "text/html;charset=utf-8";
+          return await admin.renderLogin({
+            action: admin.options.loginPath,
+            errorMessage: `Auth failed ${e}`,
+            ...providerProps,
+          });
+        }
+
+        if (adminUser) {
+          ctx.cookie[cookieName].value = await ctx.jwt.sign(adminUser);
           return ctx.redirect(
             ctx.cookie?.redirectTo?.value ?? admin.options.rootPath,
             302,
           );
         } else {
+          cookie[cookieName]?.remove();
+          ctx.set.headers["Content-Type"] = "text/html;charset=utf-8";
           return await admin.renderLogin({
             action: admin.options.loginPath,
             errorMessage: "Invalid credentials",
@@ -124,7 +136,7 @@ export const buildLoginLogout = (
   return router;
 };
 
-export const buildAuth = (
+const buildAuth = (
   admin: AdminJS,
   auth: AuthenticationOptions,
   router: RouterType,
@@ -148,7 +160,7 @@ export const buildAuth = (
 export const buildAuthenticatedRouter = async (
   admin: AdminJS,
   auth: AuthenticationOptions,
-  options: RouterOptions,
+  options: AuthenticatedRouterOptions,
 ): Promise<RouterType> => {
   // initialize bundler
   await admin.initialize();
