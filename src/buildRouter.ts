@@ -106,9 +106,11 @@ const routeHandler =
     return response._getData();
   };
 
+export type RouterOptions = {};
+
 export const buildRouter = async (
   admin: AdminJS,
-  options: { logErrors: boolean; logAccess: boolean },
+  options: RouterOptions,
 ): Promise<RouterType> => {
   // initialize bundler
   await admin.initialize();
@@ -117,19 +119,6 @@ export const buildRouter = async (
   // create router
   const { routes, assets } = AdminJSRouter;
   const router: RouterType = new Elysia({ prefix: admin.options.rootPath });
-
-  //add logging into router
-  router
-    .onError(({ code, error }) => {
-      if (options.logErrors) {
-        console.error("fatal error: ", error, "code", code);
-      }
-    })
-    .onBeforeHandle(({ request, path }) => {
-      if (options.logAccess) {
-        console.log(`${request.method} [${path}]`);
-      }
-    });
 
   // add all necessary routes
   buildAssets(admin, assets, routes, router);

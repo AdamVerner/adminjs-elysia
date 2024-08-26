@@ -19,10 +19,7 @@ export type AuthenticationOptions = {
   provider: BaseAuthProvider<Context>;
 };
 
-export type AuthenticatedRouterOptions = {
-  logErrors: boolean;
-  logAccess: boolean;
-};
+export type AuthenticatedRouterOptions = {};
 
 const getLoginPath = (admin: AdminJS): string => {
   const { loginPath, rootPath } = admin.options;
@@ -106,6 +103,7 @@ const buildLoginLogout = (
             ctx,
           );
         } catch (e) {
+          console.error(`Auth failed ${e}`);
           cookie[cookieName]?.remove();
           ctx.set.headers["Content-Type"] = "text/html;charset=utf-8";
           return await admin.renderLogin({
@@ -116,12 +114,14 @@ const buildLoginLogout = (
         }
 
         if (adminUser) {
+          console.log("Successfully authenticated: ", adminUser);
           ctx.cookie[cookieName].value = await ctx.jwt.sign(adminUser);
           return ctx.redirect(
             ctx.cookie?.redirectTo?.value ?? admin.options.rootPath,
             302,
           );
         } else {
+          console.error("Invalid credentials");
           cookie[cookieName]?.remove();
           ctx.set.headers["Content-Type"] = "text/html;charset=utf-8";
           return await admin.renderLogin({
@@ -174,19 +174,6 @@ export const buildAuthenticatedRouter = async (
   // create router
   const { routes, assets } = AdminJSRouter;
   const router: RouterType = new Elysia({ prefix: admin.options.rootPath });
-
-  //add logging into router
-  router
-    .onBeforeHandle(({ request, path }) => {
-      if (options.logAccess) {
-        console.log(`${request.method} [${path}]`);
-      }
-    })
-    .onError(({ code, error }) => {
-      if (options.logErrors) {
-        console.error("fatal error: ", error, "code", code);
-      }
-    });
 
   buildAssets(admin, assets, routes, router);
   buildLoginLogout(admin, auth, router);
